@@ -15,12 +15,15 @@ const io = new Server(server, {
 const PORT = 5000;
 let games = {}; // Store all game sessions
 
+// Array of words to choose from
+const words = ['house', 'tree', 'dog', 'car', 'apple', 'sun', 'boat'];
+
 app.use(cors());
 app.use(express.json());
 
 app.post('/create-game', (req, res) => {
   const gameId = Math.random().toString(36).substring(2, 10);
-  games[gameId] = { players: [], gameStatus: 'waiting', drawer: null };
+  games[gameId] = { players: [], gameStatus: 'waiting', drawer: null, drawingPrompt: null };
   res.json({ gameId });
 });
 
@@ -49,6 +52,11 @@ io.on('connection', (socket) => {
     if (games[gameId]) {
       games[gameId].gameStatus = 'inProgress';
       games[gameId].drawer = games[gameId].players[0]; // Set the first player as the drawer
+
+      // Select a random word from the array
+      const randomWord = words[Math.floor(Math.random() * words.length)];
+      games[gameId].drawingPrompt = randomWord;
+
       io.to(gameId).emit('gameUpdate', games[gameId]);
     } else {
       socket.emit('error', { message: 'Game not found' });

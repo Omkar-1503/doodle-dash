@@ -5,9 +5,80 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #f4f4f4; /* Light background color */
+  color: #333; /* Darker text color for contrast */
+  display: flex; /* Use Flexbox */
+  flex-direction: column; /* Column layout */
+  align-items: center; /* Center content horizontally */
+  justify-content: flex-start; /* Align content to the top */
+  height: 100vh; /* Full viewport height */
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Home component styles */
+h1 {
+  text-align: left; /* Align header text to the left */
+  color: #4CAF50; /* Green color for header */
+  margin: 20px; /* Margin for spacing */
+}
+
+button {
+  background-color: #4CAF50; /* Green button */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #45a049; /* Darker green on hover */
+}
+
+/* Additional styling for Game component */
+.game-container {
+  padding: 20px;
+}
+
+.player-list {
+  list-style: none;
+  padding: 0;
+}
+
+.player-list li {
+  margin: 5px 0;
+  padding: 8px;
+  background-color: #ffffff; /* White background for player list */
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Light shadow for elevation */
+}
+
+/* Centering the canvas */
+canvas {
+  border: 2px solid #333; /* Dark border for the canvas */
+  background-color: #ffffff; /* White background for drawing area */
+  cursor: crosshair; /* Crosshair cursor for drawing */
+  display: block; /* Ensures the canvas is block-level */
+  margin: 20px 0; /* Center the canvas vertically and add space around */
+  max-width: 100%; /* Make sure it doesn't overflow */
+  height: auto; /* Maintain aspect ratio */
+}
+
+/* Game status and prompt styles */
+h3 {
+  text-align: left; /* Align subheading text to the left */
+  color: #555; /* Lighter text color for subheadings */
+}
+
+.drawing-prompt {
+  text-align: left; /* Align drawing prompt text to the left */
+  margin-top: 10px;
+  font-style: italic; /* Italic for drawing prompt */
+  color: #777; /* Light gray for drawing prompt */
 }
