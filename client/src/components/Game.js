@@ -1,99 +1,87 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
+import './Game.css'; // Assuming you have a Game.css file for styling
 
 const socket = io('http://localhost:5000');
 
 const Game = () => {
-  const { gameId } = useParams();
+  const { gameId } = useParams(); // Getting gameId from the URL params
+  const location = useLocation(); // Get playerName passed from Home.js
+  const playerName = location.state?.playerName || 'Player 1'; // Fallback to 'Player 1' if not provided
+
   const [players, setPlayers] = useState([]);
   const [gameStatus, setGameStatus] = useState('waiting');
-  const [drawer, setDrawer] = useState(null);
-  const [playerName] = useState('Player ' + (Math.random().toString(36).substring(7))); // Unique player name
+  const [drawingPrompt, setDrawingPrompt] = useState(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawer, setDrawer] = useState(null); // Track who is the drawer
+
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
-  const [isDrawing, setIsDrawing] = useState(false);
 
   useEffect(() => {
-    // Join game room
+    // Join the game room
     socket.emit('joinGame', { gameId, playerName });
 
     // Listen for game updates
     socket.on('gameUpdate', (game) => {
       setPlayers(game.players);
       setGameStatus(game.gameStatus);
-      setDrawer(game.drawer); // Set current drawer
+      setDrawingPrompt(game.drawingPrompt);
+      setDrawer(game.drawer); // Set the drawer (player who is currently drawing)
     });
 
     // Listen for drawing data from the server
     socket.on('drawingData', (data) => {
-      drawOnCanvas(data);
+      if (contextRef.current) {
+        drawOnCanvas(data);
+      }
     });
 
-    // Setup canvas size
+    // Setup the canvas
     const canvas = canvasRef.current;
-    if (canvas) {
-      const width = window.innerWidth * 0.9; // Large canvas size
-      const height = window.innerHeight * 0.7;
-      canvas.width = width; 
-      canvas.height = height; 
-      const context = canvas.getContext('2d');
-      context.lineCap = 'round';
-      context.strokeStyle = 'black';
-      context.lineWidth = 5;
-      contextRef.current = context;
-    }
+    canvas.width = window.innerWidth * 0.7;
+    canvas.height = window.innerHeight * 0.7;
+
+    const context = canvas.getContext('2d');
+    context.lineCap = 'round';
+    context.strokeStyle = 'black';
+    context.lineWidth = 5;
+    contextRef.current = context;
 
     // Cleanup on component unmount
-    return () => {
-      socket.disconnect();
-    };
+    return () => socket.disconnect();
   }, [gameId, playerName]);
 
-  const getRelativeCoordinates = (event) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;   // Relationship bitmap vs. element for X
-    const scaleY = canvas.height / rect.height; // Relationship bitmap vs. element for Y
-    return {
-      offsetX: (event.clientX - rect.left) * scaleX,
-      offsetY: (event.clientY - rect.top) * scaleY,
-    };
+  const startDrawing = ({ nativeEvent }) => {
+    if (playerName !== drawer) return; // Only the current drawer can draw
+
+    const { offsetX, offsetY } = nativeEvent;
+    contextRef.current.beginPath();
+    contextRef.current.moveTo(offsetX, offsetY);
+    setIsDrawing(true);
   };
 
-  const startDrawing = (event) => {
-    const { offsetX, offsetY } = getRelativeCoordinates(event);
-    if (playerName === drawer && contextRef.current) {
-      contextRef.current.beginPath();
-      contextRef.current.moveTo(offsetX, offsetY);
-      setIsDrawing(true);
-    }
-  };
-
-  const draw = (event) => {
-    if (!isDrawing || playerName !== drawer || !contextRef.current) return;
-    const { offsetX, offsetY } = getRelativeCoordinates(event);
-    console.log('Drawing at:', offsetX, offsetY); // Debug log
+  const draw = ({ nativeEvent }) => {
+    if (!isDrawing || playerName !== drawer) return; // Only allow the drawer to draw
+    const { offsetX, offsetY } = nativeEvent;
     contextRef.current.lineTo(offsetX, offsetY);
     contextRef.current.stroke();
 
-    // Emit drawing data to the server
-    socket.emit('drawingData', { gameId, offsetX, offsetY });
+    // Send drawing data to the server
+    socket.emit('draw', { gameId, offsetX, offsetY });
   };
 
   const stopDrawing = () => {
-    if (contextRef.current) {
-      contextRef.current.closePath();
-      setIsDrawing(false);
-    }
+    if (playerName !== drawer) return; // Only the drawer can stop drawing
+    contextRef.current.closePath();
+    setIsDrawing(false);
   };
 
   const drawOnCanvas = (data) => {
-    if (contextRef.current) {
-      const { offsetX, offsetY } = data;
-      contextRef.current.lineTo(offsetX, offsetY);
-      contextRef.current.stroke();
-    }
+    const { offsetX, offsetY } = data;
+    contextRef.current.lineTo(offsetX, offsetY);
+    contextRef.current.stroke();
   };
 
   const handleStartGame = () => {
@@ -101,7 +89,7 @@ const Game = () => {
   };
 
   return (
-    <div>
+    <div className="game-container">
       <h2>Game Lobby: {gameId}</h2>
       <h3>Players:</h3>
       <ul>
@@ -109,20 +97,21 @@ const Game = () => {
           <li key={index}>{player}</li>
         ))}
       </ul>
-      {gameStatus === 'waiting' && <button onClick={handleStartGame}>Start Game</button>}
-      {gameStatus === 'inProgress' && (
-        <div>
-          <p>Current drawer: {drawer}</p>
-          <canvas
-            ref={canvasRef}
-            style={{ border: '1px solid black', width: '90%', height: '70%' }} // Large canvas style
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-          />
-        </div>
-      )}
+      <button onClick={handleStartGame}>Start Game</button>
+
+      <div>
+        <h3>Game Status: {gameStatus}</h3>
+        {drawingPrompt && <p>Drawing Prompt: {drawingPrompt}</p>}
+        {drawer && <p>Current Drawer: {drawer}</p>} {/* Display the current drawer's name */}
+      </div>
+      <canvas
+        ref={canvasRef}
+        onMouseDown={startDrawing}
+        onMouseMove={draw}
+        onMouseUp={stopDrawing}
+        onMouseOut={stopDrawing}
+        className="drawing-canvas"
+      />
     </div>
   );
 };

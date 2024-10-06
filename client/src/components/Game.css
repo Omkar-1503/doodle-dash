@@ -1,0 +1,80 @@
+/* Game container */
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f4f6f9;
+    padding: 20px;
+  }
+  
+  /* Title styles */
+  .game-title {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom:10px;
+  }
+  
+  .players-title {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+  }
+  
+  .players-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .player-item {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+    color: #555;
+  }
+  
+  /* Start button */
+  .game-btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: #fff;
+    background-color: #28a745;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+  }
+  
+  .game-btn:hover {
+    background-color: #218838;
+  }
+  
+  .start-btn {
+    background-color: #007bff;
+  }
+  
+  .start-btn:hover {
+    background-color: #0069d9;
+  }
+  
+  /* Canvas container and styles */
+  .canvas-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+  
+  .drawer-info {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #444;
+  }
+  
+  .drawing-canvas {
+    border: 2px solid #000;
+    background-color: #fff;
+    width: 90%;
+    height: 70%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
